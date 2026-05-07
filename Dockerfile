@@ -32,9 +32,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/app/generated ./app/generated
 # All production node_modules (includes Prisma, pg, adapters, etc.)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Prisma generated query engine (from builder, not deps)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-
 USER nextjs
 
 EXPOSE 3000
