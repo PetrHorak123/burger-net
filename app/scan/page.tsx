@@ -3,6 +3,8 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Modal from "@/components/Modal";
+import { useLocale } from "@/contexts/LocaleContext";
+import { formatCZK } from "@/lib/i18n";
 
 type ScanState =
   | "loading"
@@ -30,6 +32,7 @@ function ScanContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const burgerId = searchParams.get("id");
+  const { t } = useLocale();
 
   const [state, setState] = useState<ScanState>("loading");
   const [burgerInfo, setBurgerInfo] = useState<BurgerInfo | null>(null);
@@ -103,8 +106,8 @@ function ScanContent() {
 
     setIsSubmitting(false);
 
-    if (res.status === 401) { setErrorMsg("Wrong PIN, try again."); return; }
-    if (!res.ok) { setErrorMsg("Something went wrong."); return; }
+    if (res.status === 401) { setErrorMsg(t.wrongPin); return; }
+    if (!res.ok) { setErrorMsg(t.somethingWentWrong); return; }
 
     sessionStorage.setItem(SESSION_ADMIN_KEY, "1");
     sessionStorage.setItem(SESSION_PIN_KEY, pin);
@@ -118,7 +121,7 @@ function ScanContent() {
 
     const numPrice = parseFloat(price);
     if (isNaN(numPrice) || numPrice < 0) {
-      setErrorMsg("Enter a valid price.");
+      setErrorMsg(t.scanValidPrice);
       setIsSubmitting(false);
       return;
     }
@@ -133,9 +136,9 @@ function ScanContent() {
 
     setIsSubmitting(false);
 
-    if (res.status === 401) { setErrorMsg("PIN rejected. Re-enter on next scan."); sessionStorage.removeItem(SESSION_ADMIN_KEY); return; }
-    if (res.status === 409) { setErrorMsg("Burger already registered."); return; }
-    if (!res.ok) { setErrorMsg("Something went wrong."); return; }
+    if (res.status === 401) { setErrorMsg(t.scanPinRejected); sessionStorage.removeItem(SESSION_ADMIN_KEY); return; }
+    if (res.status === 409) { setErrorMsg(t.scanBurgerRegistered); return; }
+    if (!res.ok) { setErrorMsg(t.somethingWentWrong); return; }
 
     setSettledPrice(numPrice);
     setState("admin_success");
@@ -156,7 +159,7 @@ function ScanContent() {
     });
 
     if (!res.ok) {
-      setErrorMsg("Registration failed. Please try again.");
+      setErrorMsg(t.scanRegistrationFailed);
       setIsSubmitting(false);
       return;
     }
@@ -165,18 +168,16 @@ function ScanContent() {
     await doClaimBurger(userId);
   }
 
-  if (!burgerId) return <ErrorScreen title="Invalid QR Code" body="This link is missing a burger ID." />;
+  if (!burgerId) return <ErrorScreen title={t.scanInvalidQr} body={t.scanInvalidLink} />;
 
   return (
     <div className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
-      {state === "loading" && <Spinner />}
+      {state === "loading" && <Spinner text={t.scanLoading} />}
 
       {state === "admin_pin" && (
         <Modal title="🔐 Admin Access">
           <form onSubmit={handlePinSubmit} className="space-y-4">
-            <p className="text-sm text-gray-600">
-              New burger — enter your admin PIN to register it.
-            </p>
+            <p className="text-sm text-gray-600">{t.scanAdminPinHint}</p>
             <input
               type="password"
               inputMode="numeric"
@@ -188,34 +189,34 @@ function ScanContent() {
             />
             {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
             <button type="submit" disabled={isSubmitting || !pin} className={btnClass}>
-              {isSubmitting ? "Checking..." : "Enter"}
+              {isSubmitting ? t.checking : t.enter}
             </button>
           </form>
         </Modal>
       )}
 
       {state === "admin_price" && (
-        <Modal title="💰 Set Burger Price">
+        <Modal title={t.scanSetPrice}>
           <form onSubmit={handlePriceSubmit} className="space-y-4">
             <p className="text-sm text-gray-600">
-              ID: <span className="font-mono text-xs text-gray-400">{burgerId?.slice(0, 8)}…</span>
+              {t.scanIdLabel} <span className="font-mono text-xs text-gray-400">{burgerId?.slice(0, 8)}…</span>
             </p>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">€</span>
               <input
                 type="number"
-                step="0.01"
+                step="1"
                 min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="0.00"
-                className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 text-xl focus:border-amber-500 focus:outline-none"
+                placeholder="0"
+                className="w-full rounded-lg border border-gray-300 px-4 pr-16 py-3 text-xl focus:border-amber-500 focus:outline-none"
                 autoFocus
               />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">Kč</span>
             </div>
             {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
             <button type="submit" disabled={isSubmitting || !price} className={btnClass}>
-              {isSubmitting ? "Saving..." : "Confirm Price"}
+              {isSubmitting ? t.scanSaving : t.scanConfirmPrice}
             </button>
           </form>
         </Modal>
@@ -224,25 +225,25 @@ function ScanContent() {
       {state === "admin_success" && (
         <div className="text-center">
           <div className="text-6xl mb-4">✅</div>
-          <h2 className="text-2xl font-bold text-amber-800">Price Set!</h2>
+          <h2 className="text-2xl font-bold text-amber-800">{t.scanPriceSet}</h2>
           <p className="mt-2 text-amber-600">
-            Registered at <strong>€{settledPrice?.toFixed(2)}</strong>. Hand it over! 🍔
+            {t.scanRegisteredAt(formatCZK(settledPrice ?? 0))}
           </p>
           <button onClick={() => router.push("/leaderboard")} className={`mt-6 ${btnClass}`}>
-            View Leaderboard
+            {t.viewLeaderboard}
           </button>
         </div>
       )}
 
       {state === "register" && (
-        <Modal title="🍔 Claim Your Burger!">
+        <Modal title={t.scanClaimTitle}>
           <form onSubmit={handleRegisterSubmit} className="space-y-4">
-            <p className="text-sm text-gray-600">You&apos;re on the wheel — set your alias for the leaderboard.</p>
+            <p className="text-sm text-gray-600">{t.scanClaimHint}</p>
             <input
               type="text"
               value={alias}
               onChange={(e) => setAlias(e.target.value)}
-              placeholder="Your alias *"
+              placeholder={t.scanAliasPlaceholder}
               maxLength={32}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-amber-500 focus:outline-none"
               autoFocus
@@ -251,30 +252,30 @@ function ScanContent() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email (optional)"
+              placeholder={t.scanEmailPlaceholder}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-amber-500 focus:outline-none"
             />
             {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
             <button type="submit" disabled={isSubmitting || !alias.trim()} className={btnClass}>
-              {isSubmitting ? "Claiming..." : "Claim Burger 🍔"}
+              {isSubmitting ? t.scanClaiming : t.scanClaimButton}
             </button>
-            <p className="text-xs text-center text-gray-400">Your device is remembered — no account needed.</p>
+            <p className="text-xs text-center text-gray-400">{t.scanDeviceHint}</p>
           </form>
         </Modal>
       )}
 
-      {state === "claiming" && <Spinner text="Claiming your burger..." />}
+      {state === "claiming" && <Spinner text={t.scanClaimingBurger} />}
 
       {state === "already_yours" && (
         <div className="text-center">
           <div className="text-6xl mb-4">😎</div>
-          <h2 className="text-2xl font-bold text-amber-800">Already yours!</h2>
-          <p className="mt-2 text-amber-600">This burger is already on your tab. €{burgerInfo?.price.toFixed(2)}</p>
+          <h2 className="text-2xl font-bold text-amber-800">{t.scanAlreadyYours}</h2>
+          <p className="mt-2 text-amber-600">{t.scanAlreadyYoursBody(formatCZK(burgerInfo?.price ?? 0))}</p>
           <button
             onClick={() => { const id = localStorage.getItem(LOCAL_USER_KEY); router.push(`/leaderboard${id ? `?highlight=${id}` : ""}`); }}
             className={`mt-6 ${btnClass}`}
           >
-            View Leaderboard
+            {t.viewLeaderboard}
           </button>
         </div>
       )}
@@ -282,16 +283,16 @@ function ScanContent() {
       {state === "already_claimed" && (
         <div className="text-center">
           <div className="text-6xl mb-4">😅</div>
-          <h2 className="text-2xl font-bold text-amber-800">Already claimed</h2>
-          <p className="mt-2 text-amber-600">Someone else got this one. Enjoy your burger anyway!</p>
-          <button onClick={() => router.push("/leaderboard")} className={`mt-6 ${btnClass}`}>View Leaderboard</button>
+          <h2 className="text-2xl font-bold text-amber-800">{t.scanAlreadyClaimed}</h2>
+          <p className="mt-2 text-amber-600">{t.scanAlreadyClaimedBody}</p>
+          <button onClick={() => router.push("/leaderboard")} className={`mt-6 ${btnClass}`}>{t.viewLeaderboard}</button>
         </div>
       )}
 
       {(state === "invalid" || state === "error") && (
         <ErrorScreen
-          title={state === "invalid" ? "Invalid QR Code" : "Something went wrong"}
-          body={state === "invalid" ? "This QR code is missing a burger ID." : "Please try scanning again."}
+          title={state === "invalid" ? t.scanInvalidQr : t.somethingWentWrong}
+          body={state === "invalid" ? t.scanInvalidBody : t.scanTryAgain}
         />
       )}
     </div>
@@ -301,7 +302,7 @@ function ScanContent() {
 const btnClass =
   "w-full rounded-lg bg-amber-500 px-6 py-3 font-bold text-white hover:bg-amber-600 disabled:opacity-50 transition-colors cursor-pointer";
 
-function Spinner({ text = "Loading your burger..." }: { text?: string }) {
+function Spinner({ text }: { text: string }) {
   return (
     <div className="text-center">
       <div className="text-5xl animate-bounce mb-4">🍔</div>

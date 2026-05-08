@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useLocale } from "@/contexts/LocaleContext";
+import { formatCZK } from "@/lib/i18n";
 
 interface LeaderboardUser {
   id: string;
@@ -13,7 +15,7 @@ interface LeaderboardUser {
 
 interface LeaderboardData {
   users: LeaderboardUser[];
-  stats: { totalBurgers: number; totalRevenue: number };
+  stats: { totalBurgers: number; avgPrice: number };
 }
 
 const POLL_INTERVAL = 5000;
@@ -21,6 +23,7 @@ const POLL_INTERVAL = 5000;
 function LeaderboardContent() {
   const searchParams = useSearchParams();
   const highlightId = searchParams.get("highlight");
+  const { t } = useLocale();
 
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
@@ -61,8 +64,8 @@ function LeaderboardContent() {
     <div className="min-h-screen bg-amber-50">
       {/* Header */}
       <div className="bg-amber-500 py-6 px-4 text-center shadow-md">
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">🍔 Burger-Net</h1>
-        <p className="text-amber-100 text-sm mt-1">Live Top Spender Leaderboard</p>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">{t.lbTitle}</h1>
+        <p className="text-amber-100 text-sm mt-1">{t.lbSubtitle}</p>
       </div>
 
       {/* Stats strip */}
@@ -70,15 +73,15 @@ function LeaderboardContent() {
         <div className="bg-amber-400 flex divide-x divide-amber-300">
           <div className="flex-1 py-3 text-center">
             <div className="text-2xl font-bold text-white">{data.stats.totalBurgers}</div>
-            <div className="text-xs text-amber-100 uppercase tracking-wide">Burgers sold</div>
+            <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbBurgersSold}</div>
           </div>
           <div className="flex-1 py-3 text-center">
-            <div className="text-2xl font-bold text-white">€{data.stats.totalRevenue.toFixed(2)}</div>
-            <div className="text-xs text-amber-100 uppercase tracking-wide">Total spent</div>
+            <div className="text-2xl font-bold text-white">{formatCZK(data.stats.avgPrice)}</div>
+            <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbAvgPrice}</div>
           </div>
           <div className="flex-1 py-3 text-center">
             <div className="text-2xl font-bold text-white">{data.users.length}</div>
-            <div className="text-xs text-amber-100 uppercase tracking-wide">Players</div>
+            <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbEaters}</div>
           </div>
         </div>
       )}
@@ -88,13 +91,13 @@ function LeaderboardContent() {
         {!data ? (
           <div className="text-center py-16">
             <div className="text-5xl animate-bounce mb-4">🍔</div>
-            <p className="text-amber-700">Loading leaderboard...</p>
+            <p className="text-amber-700">{t.lbLoading}</p>
           </div>
         ) : data.users.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-5xl mb-4">🤷</div>
-            <p className="text-amber-700 font-medium">No burgers claimed yet.</p>
-            <p className="text-amber-500 text-sm mt-1">Be the first!</p>
+            <p className="text-amber-700 font-medium">{t.lbEmpty}</p>
+            <p className="text-amber-500 text-sm mt-1">{t.lbBeFirst}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -119,7 +122,7 @@ function LeaderboardContent() {
                   <div className="flex-1 min-w-0">
                     <p className={`font-semibold truncate ${isMe ? "text-white" : "text-gray-900"}`}>
                       {user.alias}
-                      {isMe && <span className="ml-2 text-xs font-normal opacity-80">← you</span>}
+                      {isMe && <span className="ml-2 text-xs font-normal opacity-80">{t.lbYou}</span>}
                     </p>
                     <p className={`text-xs ${isMe ? "text-amber-100" : "text-gray-400"}`}>
                       🍔 × {user.count}
@@ -128,7 +131,7 @@ function LeaderboardContent() {
 
                   {/* Total */}
                   <div className={`text-right font-bold text-lg ${isMe ? "text-white" : "text-amber-600"}`}>
-                    €{user.total.toFixed(2)}
+                    {formatCZK(user.total)}
                   </div>
                 </div>
               );
@@ -138,7 +141,7 @@ function LeaderboardContent() {
 
         {lastUpdated && (
           <p className="text-center text-xs text-gray-400 mt-6">
-            Updated {lastUpdated.toLocaleTimeString()} · refreshes every {POLL_INTERVAL / 1000}s
+            {t.lbUpdatedAt(lastUpdated.toLocaleTimeString(), POLL_INTERVAL / 1000)}
           </p>
         )}
       </div>
