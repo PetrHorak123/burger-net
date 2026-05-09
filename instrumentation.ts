@@ -17,10 +17,15 @@ export async function register() {
       CREATE TABLE IF NOT EXISTS "Burger" (
         "id"        TEXT         NOT NULL,
         "price"     DOUBLE PRECISION NOT NULL,
+        "rating"    INTEGER,
         "userId"    TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "Burger_pkey" PRIMARY KEY ("id")
       )
+    `;
+
+    await db.$executeRaw`
+      ALTER TABLE "Burger" ADD COLUMN IF NOT EXISTS "rating" INTEGER
     `;
 
     await db.$executeRaw`

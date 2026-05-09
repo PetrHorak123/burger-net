@@ -7,7 +7,7 @@ export default function Footer() {
   const { locale, setLocale } = useLocale();
 
   return (
-    <footer className="print:hidden mt-auto py-4 px-4 bg-amber-100 border-t border-amber-200">
+    <footer className="print:hidden fixed bottom-0 w-full z-50 py-4 px-4 bg-amber-100 border-t border-amber-200">
       <div className="max-w-2xl mx-auto flex items-center justify-center gap-2 flex-wrap">
         {LOCALES.map((l) => (
           <button

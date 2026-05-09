@@ -9,8 +9,55 @@ const SESSION_ADMIN_KEY = "adminAuthed";
 const SESSION_PIN_KEY = "adminPin";
 const BASE_URL = "https://burgerhamburgertest.pilasystem.com";
 
+const FLAG_TEXTS = [
+  "Skenuj tohle",
+  "Burger hamburger",
+  "Vrátíme se na podzim",
+  "Burgry z dovozu v ČR nechceme",
+  "Hlavně že máš pivo vole",
+  "Vy jste ten Karlos?",
+  "25 kolen",
+  "1000. burger",
+  "Fake junklab",
+  "Ta omáčka je z Mekáče?",
+  "Mňamka je hamka",
+  "Hamka je mňamka",
+  "0% vegan",
+  "Ještě jednu točku",
+  "Více štěstí příště",
+  "Kdo netočí okrádá rodinu",
+  "Netestujeme na zvířatech",
+  "Carbon neutral",
+  "Novej gril",
+  "Recept z TikToku",
+  "Alergeny: všechno",
+  "Chutná lépe s pivem",
+  "Zeptejte se na alergeny",
+  "Tohle není na Bolt",
+  "Tajná receptura",
+  "Made in garáž",
+  "Doktor nedoporučuje",
+  "Bez GMO samozřejmě",
+  "Fitness burger",
+  "Dneska platíš ty",
+  "Limitovaná edice",
+  "VIP burger",
+  "Kde je moje objednávka?",
+  "99% přírodní",
+  "Sleduj nás nikde",
+  "Záruční list v příloze",
+  "V ceně je i nervový zážitek",
+  "Chceš k tomu hranolky?",
+  "Low carb (skoro)",
+  "Sběratelský kousek",
+];
+
+const RARE_TEXT = "Dominik je tlustej";
+
 interface QREntry {
   id: string;
+  num: number;
+  text: string;
   dataUrl: string;
 }
 
@@ -22,6 +69,7 @@ export default function AdminGeneratePage() {
   const [isVerifying, setIsVerifying] = useState(false);
 
   const [count, setCount] = useState(200);
+  const [startNum, setStartNum] = useState(1);
   const [entries, setEntries] = useState<QREntry[]>([]);
   const [generating, setGenerating] = useState(false);
 
@@ -57,16 +105,27 @@ export default function AdminGeneratePage() {
     setEntries([]);
 
     const ids = Array.from({ length: count }, () => crypto.randomUUID());
+
+    // Shuffle texts and cycle through them
+    const shuffled = [...FLAG_TEXTS].sort(() => Math.random() - 0.5);
+    const texts = ids.map((_, i) => shuffled[i % shuffled.length]);
+
+    // One rare flag per batch if count > 100
+    if (ids.length > 100) {
+      texts[Math.floor(Math.random() * ids.length)] = RARE_TEXT;
+    }
+
     const results: QREntry[] = [];
 
-    for (const id of ids) {
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
       const url = `${BASE_URL}/scan?id=${id}`;
       const dataUrl = await QRCode.toDataURL(url, {
         width: 350,
         margin: 1,
         color: { dark: "#000000", light: "#ffffff" },
       });
-      results.push({ id, dataUrl });
+      results.push({ id, num: startNum + i, text: texts[i], dataUrl });
     }
 
     setEntries(results);
@@ -112,17 +171,29 @@ export default function AdminGeneratePage() {
 
       {/* Controls */}
       <div className="print:hidden max-w-md mx-auto px-4 py-8 space-y-4">
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">{t.adminQrCount}</span>
-          <input
-            type="number"
-            min={1}
-            max={500}
-            value={count}
-            onChange={(e) => setCount(parseInt(e.target.value) || 1)}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-xl focus:border-amber-500 focus:outline-none"
-          />
-        </label>
+        <div className="flex gap-3">
+          <label className="block flex-1">
+            <span className="text-sm font-medium text-gray-700">{t.adminQrCount}</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={count}
+              onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-xl focus:border-amber-500 focus:outline-none"
+            />
+          </label>
+          <label className="block w-32">
+            <span className="text-sm font-medium text-gray-700">{t.adminQrStartNum}</span>
+            <input
+              type="number"
+              min={1}
+              value={startNum}
+              onChange={(e) => setStartNum(parseInt(e.target.value) || 1)}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-xl focus:border-amber-500 focus:outline-none"
+            />
+          </label>
+        </div>
 
         <button
           onClick={handleGenerate}
@@ -153,15 +224,16 @@ export default function AdminGeneratePage() {
           <div className="flags-grid">
             {entries.map((entry) => (
               <div key={entry.id} className="flag-strip">
-                {/* QR section — 3 cm */}
+                {/* QR section — 4 cm: image left-aligned, number rotated in the gap */}
                 <div className="flag-qr">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={entry.dataUrl} alt="" className="flag-qr-img" />
+                  <div className="flag-num">{entry.num}</div>
                 </div>
 
                 {/* Text section */}
                 <div className="flag-text">
-                  Skenuj<br />tohle
+                  {entry.text}
                 </div>
               </div>
             ))}
@@ -204,6 +276,20 @@ export default function AdminGeneratePage() {
           width: 2.4cm;
           height: 2.4cm;
           display: block;
+          flex-shrink: 0;
+        }
+
+        .flag-num {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.9cm;
+          font-weight: bold;
+          font-family: Arial, sans-serif;
+          color: #000;
+          transform: rotate(90deg);
+          white-space: nowrap;
         }
 
         .flag-text {
@@ -212,7 +298,7 @@ export default function AdminGeneratePage() {
           align-items: center;
           justify-content: center;
           text-align: center;
-          font-size: 13pt;
+          font-size: 11pt;
           font-weight: bold;
           font-family: Arial, sans-serif;
           color: #111;

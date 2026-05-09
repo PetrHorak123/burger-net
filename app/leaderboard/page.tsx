@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { formatCZK } from "@/lib/i18n";
+import AppHeader from "@/components/AppHeader";
 
 interface LeaderboardUser {
   id: string;
@@ -15,22 +14,22 @@ interface LeaderboardUser {
 
 interface LeaderboardData {
   users: LeaderboardUser[];
-  stats: { totalBurgers: number; avgPrice: number };
+  stats: { totalBurgers: number; avgRating: number };
 }
 
 const POLL_INTERVAL = 5000;
 
 function LeaderboardContent() {
-  const searchParams = useSearchParams();
-  const highlightId = searchParams.get("highlight");
   const { t } = useLocale();
 
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     setMyId(localStorage.getItem("userId"));
+    setHighlightId(new URLSearchParams(window.location.search).get("highlight"));
   }, []);
 
   const fetchLeaderboard = useCallback(async () => {
@@ -61,33 +60,33 @@ function LeaderboardContent() {
   };
 
   return (
-    <div className="min-h-screen bg-amber-50">
-      {/* Header */}
-      <div className="bg-amber-500 py-6 px-4 text-center shadow-md">
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">{t.lbTitle}</h1>
-        <p className="text-amber-100 text-sm mt-1">{t.lbSubtitle}</p>
+    <div className="h-screen bg-amber-50 flex flex-col overflow-hidden">
+      {/* Fixed top */}
+      <div className="flex-shrink-0">
+        <AppHeader />
+        {data && (
+          <div className="bg-amber-400 flex divide-x divide-amber-300">
+            <div className="flex-1 py-3 text-center">
+              <div className="text-2xl font-bold text-white">{data.stats.totalBurgers}</div>
+              <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbBurgersSold}</div>
+            </div>
+            <div className="flex-1 py-3 text-center">
+              <div className="text-2xl font-bold text-white">
+                {data.stats.avgRating > 0 ? `${data.stats.avgRating.toFixed(1)} / 5` : "—"}
+              </div>
+              <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbAvgRating}</div>
+            </div>
+            <div className="flex-1 py-3 text-center">
+              <div className="text-2xl font-bold text-white">{data.users.length}</div>
+              <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbEaters}</div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Stats strip */}
-      {data && (
-        <div className="bg-amber-400 flex divide-x divide-amber-300">
-          <div className="flex-1 py-3 text-center">
-            <div className="text-2xl font-bold text-white">{data.stats.totalBurgers}</div>
-            <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbBurgersSold}</div>
-          </div>
-          <div className="flex-1 py-3 text-center">
-            <div className="text-2xl font-bold text-white">{formatCZK(data.stats.avgPrice)}</div>
-            <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbAvgPrice}</div>
-          </div>
-          <div className="flex-1 py-3 text-center">
-            <div className="text-2xl font-bold text-white">{data.users.length}</div>
-            <div className="text-xs text-amber-100 uppercase tracking-wide">{t.lbEaters}</div>
-          </div>
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* Scrollable list */}
+      <div className="flex-1 overflow-y-auto">
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-20">
         {!data ? (
           <div className="text-center py-16">
             <div className="text-5xl animate-bounce mb-4">🍔</div>
@@ -145,18 +144,11 @@ function LeaderboardContent() {
           </p>
         )}
       </div>
+      </div>
     </div>
   );
 }
 
 export default function LeaderboardPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-amber-50">
-        <div className="text-5xl animate-bounce">🍔</div>
-      </div>
-    }>
-      <LeaderboardContent />
-    </Suspense>
-  );
+  return <LeaderboardContent />;
 }

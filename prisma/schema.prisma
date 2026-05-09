@@ -10,6 +10,7 @@ datasource db {
 model Burger {
   id        String   @id
   price     Float
+  rating    Int?
   userId    String?
   user      User?    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())

@@ -16,16 +16,17 @@ export async function GET() {
     .sort((a, b) => b.total - a.total);
 
   const totalBurgers = await db.burger.count();
-  const agg = await db.burger.aggregate({ _sum: { price: true } });
-  const totalRevenue = agg._sum.price ?? 0;
-  const avgPrice = totalBurgers > 0 ? totalRevenue / totalBurgers : 0;
+  const ratingResult = await db.$queryRaw<[{ avg: number | null }]>`
+    SELECT AVG(rating) as avg FROM "Burger" WHERE rating IS NOT NULL
+  `;
+  const avgRating = Number(ratingResult[0]?.avg ?? 0);
 
   return NextResponse.json(
     {
       users: ranked,
       stats: {
         totalBurgers,
-        avgPrice,
+        avgRating,
       },
     },
     { headers: { "Cache-Control": "no-store" } }
