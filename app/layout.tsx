@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Burger-Net",
+  title: "Burgers",
   description: "Spin the wheel, claim your burger, climb the leaderboard.",
 };
 
