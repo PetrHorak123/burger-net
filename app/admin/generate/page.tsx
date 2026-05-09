@@ -7,7 +7,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 
 const SESSION_ADMIN_KEY = "adminAuthed";
 const SESSION_PIN_KEY = "adminPin";
-const BASE_URL = "https://burgerhamburgertest.pilasystem.com";
+const BASE_URL = "https://burgerhamburger.com";
 
 const FLAG_TEXTS = [
   "Skenuj tohle",
