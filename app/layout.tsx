@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import Footer from "@/components/Footer";
+import AnnouncementBar from "@/components/AnnouncementBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +32,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider>
-          {process.env.ANNOUNCEMENT && (
-            <div className="print:hidden bg-amber-100 border-b border-amber-200 py-2 px-4 text-center text-sm text-amber-800 font-medium">
-              {process.env.ANNOUNCEMENT}
-            </div>
-          )}
+          <AnnouncementBar />
           {children}
           <Footer />
         </LocaleProvider>
