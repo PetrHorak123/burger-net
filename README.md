@@ -29,21 +29,19 @@ The customer waits in line holding their numbered slip. When their burger is rea
 
 After eating, the customer scans the QR code on their flag. If they don't have a profile yet, they see a registration screen:
 
-![Registration screen](docs/screenshots/scan-register.png)
-
 They enter a nickname (and optionally an email). Their profile is stored locally on the device — future scans on the same phone are recognised automatically.
 
 ### 4. Rate the burger
 
-After registering (or if already known), the customer rates their burger 1–5 stars:
+After registering (or if already known), the customer rates their burger 1–5 stars.
 
-![Rating screen](docs/screenshots/scan-rate.png)
+<img src="docs/screenshots/scan-register.png" width="280" alt="Registration screen"> <img src="docs/screenshots/scan-rate.png" width="280" alt="Rating screen">
 
 ### 5. Leaderboard
 
 After rating, the customer is taken to the live leaderboard with their entry highlighted:
 
-![Leaderboard](docs/screenshots/leaderboard.png)
+<img src="docs/screenshots/leaderboard.png" width="340" alt="Leaderboard">
 
 The leaderboard updates every 5 seconds and shows each participant's total spend and burger count. Stats at the top show total burgers sold, total revenue, and the average rating across all burgers.
 
