@@ -74,7 +74,7 @@ export default function AdminGeneratePage() {
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem(SESSION_ADMIN_KEY) === "1") {
+    if (localStorage.getItem(SESSION_ADMIN_KEY) === "1") {
       setAuthed(true);
     }
   }, []);
@@ -95,8 +95,8 @@ export default function AdminGeneratePage() {
     if (res.status === 401) { setPinError(t.adminWrongPin); return; }
     if (!res.ok) { setPinError(t.somethingWentWrong); return; }
 
-    sessionStorage.setItem(SESSION_ADMIN_KEY, "1");
-    sessionStorage.setItem(SESSION_PIN_KEY, pin);
+    localStorage.setItem(SESSION_ADMIN_KEY, "1");
+    localStorage.setItem(SESSION_PIN_KEY, pin);
     setAuthed(true);
   }
 

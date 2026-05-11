@@ -62,7 +62,7 @@ function ScanContent() {
       })
       .then((data) => {
         if (!data) {
-          const authed = sessionStorage.getItem(SESSION_ADMIN_KEY) === "1";
+          const authed = localStorage.getItem(SESSION_ADMIN_KEY) === "1";
           setState(authed ? "admin_price" : "admin_pin");
         } else {
           setBurgerInfo(data);
@@ -75,7 +75,7 @@ function ScanContent() {
               setState("already_claimed");
             }
           } else {
-            const isAdmin = sessionStorage.getItem(SESSION_ADMIN_KEY) === "1";
+            const isAdmin = localStorage.getItem(SESSION_ADMIN_KEY) === "1";
             if (isAdmin) {
               setState("admin_rescan");
             } else {
@@ -150,8 +150,8 @@ function ScanContent() {
     if (res.status === 401) { setErrorMsg(t.wrongPin); return; }
     if (!res.ok) { setErrorMsg(t.somethingWentWrong); return; }
 
-    sessionStorage.setItem(SESSION_ADMIN_KEY, "1");
-    sessionStorage.setItem(SESSION_PIN_KEY, pin);
+    localStorage.setItem(SESSION_ADMIN_KEY, "1");
+    localStorage.setItem(SESSION_PIN_KEY, pin);
     setState("admin_price");
   }
 
@@ -167,7 +167,7 @@ function ScanContent() {
       return;
     }
 
-    const cachedPin = sessionStorage.getItem(SESSION_PIN_KEY) ?? pin;
+    const cachedPin = localStorage.getItem(SESSION_PIN_KEY) ?? pin;
 
     const res = await fetch("/api/admin/burger", {
       method: "POST",
@@ -177,7 +177,7 @@ function ScanContent() {
 
     setIsSubmitting(false);
 
-    if (res.status === 401) { setErrorMsg(t.scanPinRejected); sessionStorage.removeItem(SESSION_ADMIN_KEY); return; }
+    if (res.status === 401) { setErrorMsg(t.scanPinRejected); localStorage.removeItem(SESSION_ADMIN_KEY); localStorage.removeItem(SESSION_PIN_KEY); return; }
     if (res.status === 409) { setErrorMsg(t.scanBurgerRegistered); return; }
     if (!res.ok) { setErrorMsg(t.somethingWentWrong); return; }
 
