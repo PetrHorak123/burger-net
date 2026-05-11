@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LocaleProvider } from "@/contexts/LocaleContext";
-import Footer from "@/components/Footer";
+import ConditionalFooter from "@/components/ConditionalFooter";
 import AnnouncementBar from "@/components/AnnouncementBar";
 
 const geistSans = Geist({
@@ -30,11 +30,11 @@ export default function RootLayout({
       lang="cs"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="h-screen overflow-hidden flex flex-col">
         <LocaleProvider>
           <AnnouncementBar />
           {children}
-          <Footer />
+          <ConditionalFooter />
         </LocaleProvider>
       </body>
     </html>

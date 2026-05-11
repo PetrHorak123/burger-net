@@ -60,7 +60,7 @@ function LeaderboardContent() {
   };
 
   return (
-    <div className="h-screen bg-amber-50 flex flex-col overflow-hidden">
+    <div className="flex-1 bg-amber-50 flex flex-col overflow-hidden">
       {/* Fixed top */}
       <div className="flex-shrink-0">
         <AppHeader />
